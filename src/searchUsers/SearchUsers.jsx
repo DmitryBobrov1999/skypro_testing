@@ -1,8 +1,8 @@
 import * as S from './SearchUsers.styles';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import ReactPaginate from 'react-paginate';
-import './pagination.css';
+import { DropDown } from '../components/dropdown/Dropdown';
+import { Pagination } from '../components/pagination/Pagination';
 
 export const SearchUsers = () => {
 	const [userName, setUserName] = useState(null);
@@ -10,6 +10,9 @@ export const SearchUsers = () => {
 	const [totalCount, setTotalCount] = useState(null);
 	const [itemOffset, setItemOffset] = useState(1);
 	const [pageCount, setPageCount] = useState(0);
+	const [selects, setSelects] = useState(null);
+	const [details, setDetails] = useState(null);
+	const [userInfo, setUserInfo] = useState(null);
 	const itemsPerPage = 15;
 
 	const URL = 'https://api.github.com/';
@@ -44,13 +47,14 @@ export const SearchUsers = () => {
 
 	const handleSubmit = event => {
 		event.preventDefault();
-		// setCurrentPage(1);
+
 		axios
 			.get(
-				`${URL}search/users?q=${userName}&per_page=${itemsPerPage}&page=${itemOffset}`
+				`${URL}search/users?q=${userName}&per_page=${itemsPerPage}&page=${itemOffset}${selects}`
 			)
 			.then(response => {
 				setUsersArray(response.data.items);
+
 				if (response.data.total_count > 1000) {
 					setTotalCount(1000);
 				} else {
@@ -64,9 +68,13 @@ export const SearchUsers = () => {
 
 	const handlePageClick = event => {
 		setItemOffset(event.selected + 1);
-
-		
 	};
+
+	function getUserInfo(user) {
+		axios.get(`${URL}users/${user}`).then(response => {
+			setUserInfo(response.data);
+		});
+	}
 
 	return (
 		<S.SearchUsersWrapper>
@@ -78,33 +86,38 @@ export const SearchUsers = () => {
 					onChange={handleChange}
 				/>
 				<S.SearchUsersButton type='submit'>Поиск</S.SearchUsersButton>
+
+				<DropDown
+					userName={userName}
+					itemOffset={itemOffset}
+					setUsersArray={setUsersArray}
+					setTotalCount={setTotalCount}
+					setSelects={setSelects}
+					selects={selects}
+				/>
 			</S.SearchUsersForm>
 
 			<S.SearchUsersContainer>
 				{usersArray &&
 					usersArray.map(user => (
-						<S.SearchUsersUser key={user.id}>
+						<S.SearchUsersUser
+							onClick={() => {
+								getUserInfo(user.login);
+								setDetails(user.id);
+							}}
+							key={user.id}
+						>
+							<S.SearchUsersInfo $isClicked={user.id === details}>
+								<span>Репозиториев: {userInfo?.public_repos}</span>
+								<span>Аккаунт создан: {userInfo?.created_at}</span>
+							</S.SearchUsersInfo>
 							<S.SearchUsersAvatar src={user.avatar_url} alt={user.login} />
 							<S.SearchUsersSpan>{user.login}</S.SearchUsersSpan>
 						</S.SearchUsersUser>
 					))}
 			</S.SearchUsersContainer>
 			{usersArray && (
-				<ReactPaginate
-					breakLabel='...'
-					nextLabel='next >'
-					onPageChange={handlePageClick}
-					pageRangeDisplayed={3}
-					pageCount={pageCount}
-					previousLabel='< previous'
-					renderOnZeroPageCount={null}
-					containerClassName='pagination'
-					pageLinkClassName='page-num'
-					previousLinkClassName='page-num'
-					nextLinkClassName='page-num'
-					activeLinkClassName='active'
-					breakLinkClassName='page-num'
-				/>
+				<Pagination pageCount={pageCount} handlePageClick={handlePageClick} />
 			)}
 		</S.SearchUsersWrapper>
 	);
