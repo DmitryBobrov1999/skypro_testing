@@ -1,36 +1,33 @@
 import * as S from './SearchUsers.styles';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { DropDown } from '../components/dropdown/Dropdown';
 import { Pagination } from '../components/pagination/Pagination';
+import axios from 'axios';
+import { getUsers } from '../components/api/getUsers';
+import { getUsersSubmit } from '../components/api/getUsersSubmit';
+import moment from 'moment/moment';
+import 'moment/locale/ru';
 
 export const SearchUsers = () => {
-	const [userName, setUserName] = useState(null);
-	const [usersArray, setUsersArray] = useState(null);
-	const [totalCount, setTotalCount] = useState(null);
-	const [itemOffset, setItemOffset] = useState(1);
-	const [pageCount, setPageCount] = useState(0);
-	const [selects, setSelects] = useState(null);
-	const [details, setDetails] = useState(null);
-	const [userInfo, setUserInfo] = useState(null);
-	const itemsPerPage = 15;
+	const [userName, setUserName] = useState(null); // логин пользователей
+	const [usersArray, setUsersArray] = useState(null); // массив пользователей
+	const [totalCount, setTotalCount] = useState(null); // кол-во пользователей
+	const [itemOffset, setItemOffset] = useState(1); // номер страницы
+	const [pageCount, setPageCount] = useState(0); // кол-во страниц
+	const [selects, setSelects] = useState(null); // выбранная сортировка
+	const [id, setId] = useState(null); // id пользователя 
+	const [userInfo, setUserInfo] = useState(null); // информация о пользователе
+	const itemsPerPage = 15; // кол-во пользователей на одной странице
 
 	const URL = 'https://api.github.com/';
 
-	const handleChange = event => {
-		setUserName(event.target.value);
-	};
-
 	useEffect(() => {
 		setPageCount(Math.ceil(totalCount / itemsPerPage));
-	}, [usersArray]);
+	}, [usersArray]); // установка кол-ва страниц при каждом изменении usersArray
 
 	useEffect(() => {
 		if (usersArray) {
-			axios
-				.get(
-					`${URL}search/users?q=${userName}&per_page=${itemsPerPage}&page=${itemOffset}`
-				)
+			getUsers(userName, itemsPerPage, itemOffset)
 				.then(response => {
 					setUsersArray(response.data.items);
 					if (response.data.total_count > 1000) {
@@ -43,18 +40,13 @@ export const SearchUsers = () => {
 					console.error('Ошибка:', error);
 				});
 		}
-	}, [itemOffset]);
+	}, [itemOffset]); // запрос на получение пользователей при переходе на опр. страницу
 
 	const handleSubmit = event => {
 		event.preventDefault();
-
-		axios
-			.get(
-				`${URL}search/users?q=${userName}&per_page=${itemsPerPage}&page=${itemOffset}${selects}`
-			)
+		getUsersSubmit(userName, itemsPerPage, itemOffset, selects)
 			.then(response => {
 				setUsersArray(response.data.items);
-
 				if (response.data.total_count > 1000) {
 					setTotalCount(1000);
 				} else {
@@ -64,17 +56,21 @@ export const SearchUsers = () => {
 			.catch(error => {
 				console.error('Ошибка:', error);
 			});
-	};
+	}; // запрос на получение пользователей при нажатии на кнопку после ввода имени в input'е
+
+	const handleChange = event => {
+		setUserName(event.target.value);
+	}; // функция для записи в стейт введенного имени в инпуте
 
 	const handlePageClick = event => {
 		setItemOffset(event.selected + 1);
-	};
+	}; // функция для записи в стейт номера страницы
 
 	function getUserInfo(user) {
 		axios.get(`${URL}users/${user}`).then(response => {
 			setUserInfo(response.data);
 		});
-	}
+	} // функция запроса информации об конкретном пользователе 
 
 	return (
 		<S.SearchUsersWrapper>
@@ -85,7 +81,9 @@ export const SearchUsers = () => {
 					placeholder='Поиск'
 					onChange={handleChange}
 				/>
-				<S.SearchUsersButton type='submit'>Поиск</S.SearchUsersButton>
+				<S.SearchUsersButton data-testid='buttonId' type='submit'>
+					Поиск
+				</S.SearchUsersButton>
 
 				<DropDown
 					userName={userName}
@@ -103,13 +101,17 @@ export const SearchUsers = () => {
 						<S.SearchUsersUser
 							onClick={() => {
 								getUserInfo(user.login);
-								setDetails(user.id);
+								setId(user.id);
 							}}
 							key={user.id}
 						>
-							<S.SearchUsersInfo $isClicked={user.id === details}>
-								<span>Репозиториев: {userInfo?.public_repos}</span>
-								<span>Аккаунт создан: {userInfo?.created_at}</span>
+							<S.SearchUsersInfo $isClicked={user.id === id}>
+								<S.SearchUsersSpan>
+									Репозиториев: {userInfo?.public_repos}
+								</S.SearchUsersSpan>
+								<S.SearchUsersSpan>
+									Аккаунт создан: {moment(userInfo?.created_at).format('LL')}
+								</S.SearchUsersSpan>
 							</S.SearchUsersInfo>
 							<S.SearchUsersAvatar src={user.avatar_url} alt={user.login} />
 							<S.SearchUsersSpan>{user.login}</S.SearchUsersSpan>

@@ -41,28 +41,32 @@ export const SearchUsersUser = styled.div`
 	display: flex;
 	flex-direction: column;
 	position: relative;
-	
+	border: 3px solid grey;
+	border-radius: 3px;
 `;
 
 export const SearchUsersInfo = styled.div`
 	position: absolute;
 	background: white;
-	width: 200px;
-	height: 204px;
+	width: inherit;
+	height: 100%;
 	transform: ${props =>
-		props.$isClicked ? 'translate(0px)' :'translate(200px)'};
-	${'' /* display: ${props => (props.$isClicked ? 'block' : 'none')}; */}
+		props.$isClicked ? 'translate(0px)' : 'translate(190px)'};
 	opacity: ${props => (props.$isClicked ? '1' : '0')};
 	transition: all 0.5s;
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
 `;
 
 export const SearchUsersAvatar = styled.img`
 	padding-bottom: 4px;
 `;
 
-export const SearchUsersSpan = styled.span``;
+export const SearchUsersSpan = styled.span`
+	padding-bottom: 4px;
+	text-align: center;
+`;
 
 export const SearchUsersDropNav = styled.nav`
 	list-style: none;

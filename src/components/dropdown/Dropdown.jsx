@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import * as S from './Dropdown.styles';
-import axios from 'axios';
+import { getUsersSubmit } from '../api/getUsersSubmit';
 
 export const DropDown = ({
 	userName,
@@ -10,29 +10,22 @@ export const DropDown = ({
 	setSelects,
 	selects,
 }) => {
-	
 	const itemsPerPage = 15;
-	const URL = 'https://api.github.com/';
 
 	useEffect(() => {
-		
-			axios
-				.get(
-					`${URL}search/users?q=${userName}&per_page=${itemsPerPage}&page=${itemOffset}${selects}`
-				)
-				.then(response => {
-					setUsersArray(response.data.items);
-					if (response.data.total_count > 1000) {
-						setTotalCount(1000);
-					} else {
-						setTotalCount(response.data.total_count);
-					}
-				})
-				.catch(error => {
-					console.error('Ошибка:', error);
-				});
-		
-	}, [selects]);
+		getUsersSubmit(userName, itemsPerPage, itemOffset, selects)
+			.then(response => {
+				setUsersArray(response.data.items);
+				if (response.data.total_count > 1000) {
+					setTotalCount(1000);
+				} else {
+					setTotalCount(response.data.total_count);
+				}
+			})
+			.catch(error => {
+				console.error('Ошибка:', error);
+			});
+	}, [selects]); // запрос на получение списка пользователей при переключении сортировки
 
 	return (
 		<S.DropdownDiv>
@@ -47,6 +40,4 @@ export const DropDown = ({
 			</S.DropdownSelect>
 		</S.DropdownDiv>
 	);
-};
-
-
+}; // компонент сортировки

@@ -1,4 +1,3 @@
-import ReactPaginate from 'react-paginate';
 import * as S from './Pagination.styles';
 
 export const Pagination = ({ handlePageClick, pageCount }) => {
@@ -19,4 +18,4 @@ export const Pagination = ({ handlePageClick, pageCount }) => {
 			breakLinkClassName='page-num'
 		/>
 	);
-};
+}; // компонент пагинации
