@@ -1,30 +1,32 @@
 import { useEffect } from 'react';
 import * as S from './Dropdown.styles';
-import { getUsersSubmit } from '../api/getUsersSubmit';
+import { getUsersSubmit } from '../../api/getUsersSubmit';
 
 export const DropDown = ({
 	userName,
 	itemOffset,
 	setUsersArray,
-	setTotalCount,
 	setSelects,
 	selects,
+	usersArray,
+	setLoader,
+	setError,
 }) => {
 	const itemsPerPage = 15;
 
 	useEffect(() => {
-		getUsersSubmit(userName, itemsPerPage, itemOffset, selects)
-			.then(response => {
-				setUsersArray(response.data.items);
-				if (response.data.total_count > 1000) {
-					setTotalCount(1000);
-				} else {
-					setTotalCount(response.data.total_count);
-				}
-			})
-			.catch(error => {
-				console.error('Ошибка:', error);
-			});
+		if (usersArray) {
+			setLoader(true);
+			getUsersSubmit({ userName, itemsPerPage, itemOffset, selects, setLoader })
+				.then(response => {
+					setLoader(false);
+					setUsersArray(response.data.items);
+				})
+				.catch(error => {
+					setLoader(false);
+					setError(error);
+				});
+		}
 	}, [selects]); // запрос на получение списка пользователей при переключении сортировки
 
 	return (

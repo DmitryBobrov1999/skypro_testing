@@ -3,10 +3,11 @@ import { useEffect, useState } from 'react';
 import { DropDown } from '../components/dropdown/Dropdown';
 import { Pagination } from '../components/pagination/Pagination';
 import axios from 'axios';
-import { getUsers } from '../components/api/getUsers';
-import { getUsersSubmit } from '../components/api/getUsersSubmit';
+import { getUsersSubmit } from '../api/getUsersSubmit';
 import moment from 'moment/moment';
 import 'moment/locale/ru';
+import { Loader } from '../components/loader/Loader';
+import { Error } from '../components/error/Error';
 
 export const SearchUsers = () => {
 	const [userName, setUserName] = useState(null); // логин пользователей
@@ -14,9 +15,11 @@ export const SearchUsers = () => {
 	const [totalCount, setTotalCount] = useState(null); // кол-во пользователей
 	const [itemOffset, setItemOffset] = useState(1); // номер страницы
 	const [pageCount, setPageCount] = useState(0); // кол-во страниц
-	const [selects, setSelects] = useState(null); // выбранная сортировка
-	const [id, setId] = useState(null); // id пользователя 
+	const [selects, setSelects] = useState('&'); // выбранная сортировка
+	const [id, setId] = useState(null); // id пользователя
 	const [userInfo, setUserInfo] = useState(null); // информация о пользователе
+	const [loader, setLoader] = useState(false);
+	const [error, setError] = useState(null);
 	const itemsPerPage = 15; // кол-во пользователей на одной странице
 
 	const URL = 'https://api.github.com/';
@@ -27,25 +30,25 @@ export const SearchUsers = () => {
 
 	useEffect(() => {
 		if (usersArray) {
-			getUsers(userName, itemsPerPage, itemOffset)
+			setLoader(true);
+			getUsersSubmit({ userName, itemsPerPage, itemOffset, selects })
 				.then(response => {
+					setLoader(false);
 					setUsersArray(response.data.items);
-					if (response.data.total_count > 1000) {
-						setTotalCount(1000);
-					} else {
-						setTotalCount(response.data.total_count);
-					}
 				})
 				.catch(error => {
-					console.error('Ошибка:', error);
+					setLoader(false);
+					setError(error);
 				});
 		}
 	}, [itemOffset]); // запрос на получение пользователей при переходе на опр. страницу
 
 	const handleSubmit = event => {
 		event.preventDefault();
-		getUsersSubmit(userName, itemsPerPage, itemOffset, selects)
+		setLoader(true);
+		getUsersSubmit({ userName, itemsPerPage, itemOffset, selects })
 			.then(response => {
+				setLoader(false);
 				setUsersArray(response.data.items);
 				if (response.data.total_count > 1000) {
 					setTotalCount(1000);
@@ -54,9 +57,10 @@ export const SearchUsers = () => {
 				}
 			})
 			.catch(error => {
-				console.error('Ошибка:', error);
+				setLoader(false);
+				setError(error);
 			});
-	}; // запрос на получение пользователей при нажатии на кнопку после ввода имени в input'е
+	}; // запрос на получение пользователей при нажатии на кнопку после ввода имени в инпуте
 
 	const handleChange = event => {
 		setUserName(event.target.value);
@@ -66,11 +70,11 @@ export const SearchUsers = () => {
 		setItemOffset(event.selected + 1);
 	}; // функция для записи в стейт номера страницы
 
-	function getUserInfo(user) {
+	const getUserInfo = (user) => {
 		axios.get(`${URL}users/${user}`).then(response => {
 			setUserInfo(response.data);
 		});
-	} // функция запроса информации об конкретном пользователе 
+	} // функция запроса информации о конкретном пользователе
 
 	return (
 		<S.SearchUsersWrapper>
@@ -81,7 +85,11 @@ export const SearchUsers = () => {
 					placeholder='Поиск'
 					onChange={handleChange}
 				/>
-				<S.SearchUsersButton data-testid='buttonId' type='submit'>
+				<S.SearchUsersButton
+					data-testid='button'
+					disabled={userName ? false : true}
+					type='submit'
+				>
 					Поиск
 				</S.SearchUsersButton>
 
@@ -92,33 +100,45 @@ export const SearchUsers = () => {
 					setTotalCount={setTotalCount}
 					setSelects={setSelects}
 					selects={selects}
+					usersArray={usersArray}
+					setLoader={setLoader}
+					setError={setError}
 				/>
 			</S.SearchUsersForm>
 
-			<S.SearchUsersContainer>
-				{usersArray &&
-					usersArray.map(user => (
-						<S.SearchUsersUser
-							onClick={() => {
-								getUserInfo(user.login);
-								setId(user.id);
-							}}
-							key={user.id}
-						>
-							<S.SearchUsersInfo $isClicked={user.id === id}>
-								<S.SearchUsersSpan>
-									Репозиториев: {userInfo?.public_repos}
-								</S.SearchUsersSpan>
-								<S.SearchUsersSpan>
-									Аккаунт создан: {moment(userInfo?.created_at).format('LL')}
-								</S.SearchUsersSpan>
-							</S.SearchUsersInfo>
-							<S.SearchUsersAvatar src={user.avatar_url} alt={user.login} />
-							<S.SearchUsersSpan>{user.login}</S.SearchUsersSpan>
-						</S.SearchUsersUser>
-					))}
-			</S.SearchUsersContainer>
-			{usersArray && (
+			{loader ? (
+				<Loader />
+			) : (
+				<>
+					<S.SearchUsersContainer>
+						{usersArray &&
+							usersArray.map(user => (
+								<S.SearchUsersUser
+									onClick={() => {
+										getUserInfo(user.login);
+										setId(user.id);
+									}}
+									key={user.id}
+								>
+									<S.SearchUsersInfo $isClicked={user.id === id}>
+										<S.SearchUsersSpan>
+											Репозиториев: {userInfo?.public_repos}
+										</S.SearchUsersSpan>
+										<S.SearchUsersSpan>
+											Аккаунт создан:{' '}
+											{moment(userInfo?.created_at).format('LL')}
+										</S.SearchUsersSpan>
+									</S.SearchUsersInfo>
+									<S.SearchUsersAvatar src={user.avatar_url} alt={user.login} />
+									<S.SearchUsersSpan>{user.login}</S.SearchUsersSpan>
+								</S.SearchUsersUser>
+							))}
+					</S.SearchUsersContainer>
+					{usersArray?.length === 0 && 'Данных нет'}
+					{error && <Error error={error} />}
+				</>
+			)}
+			{usersArray?.length > 0 && (
 				<Pagination pageCount={pageCount} handlePageClick={handlePageClick} />
 			)}
 		</S.SearchUsersWrapper>

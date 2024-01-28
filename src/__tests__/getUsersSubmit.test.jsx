@@ -1,4 +1,4 @@
-import { getUsersSubmit } from './getUsersSubmit';
+import { getUsersSubmit } from '../api/getUsersSubmit';
 import axios from 'axios';
 jest.mock('axios');
 
@@ -10,6 +10,6 @@ it('should return a successful response', async () => {
 	};
 	axios.get = jest.fn().mockResolvedValue(mockResponse);
 
-	const usersData = await getUsersSubmit();
+	const usersData = await getUsersSubmit({});
 	expect(mockResponse.data).toEqual(usersData.data);
-}); // тест get-запроса
+});
