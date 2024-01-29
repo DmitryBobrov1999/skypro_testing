@@ -7,6 +7,7 @@ export const SearchUsersWrapper = styled.div`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	
 `;
 
 export const SearchUsersContainer = styled.div`
@@ -15,6 +16,7 @@ export const SearchUsersContainer = styled.div`
 	display: grid;
 	grid-template-columns: repeat(5, 200px);
 	grid-gap: 30px 26px;
+	cursor: pointer;
 `;
 
 export const SearchUsersTitle = styled.h1``;
@@ -39,10 +41,48 @@ export const SearchUsersInput = styled.input`
 export const SearchUsersUser = styled.div`
 	display: flex;
 	flex-direction: column;
+	position: relative;
+	border: 3px solid grey;
+	border-radius: 3px;
+`;
+
+export const SearchUsersInfo = styled.div`
+	position: absolute;
+	background: white;
+	width: inherit;
+	height: 100%;
+	transform: ${props =>
+		props.$isClicked ? 'translate(0px)' : 'translate(190px)'};
+	opacity: ${props => (props.$isClicked ? '1' : '0')};
+	transition: all 0.5s;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 `;
 
 export const SearchUsersAvatar = styled.img`
 	padding-bottom: 4px;
 `;
 
-export const SearchUsersSpan = styled.span``;
+export const SearchUsersSpan = styled.span`
+	padding-bottom: 4px;
+	text-align: center;
+`;
+
+export const SearchUsersDropNav = styled.nav`
+	list-style: none;
+	overflow: hidden;
+	height: 172px;
+	background-color: #34495e;
+	font-family: Arial;
+	width: 200px;
+	margin: 0 auto;
+	padding: 0;
+	text-align: center;
+	-webkit-transition: height 0.3s ease;
+	transition: height 0.3s ease;
+`;
+
+export const SearchUsersDropUl = styled.ul``;
+
+export const SearchUsersDropLi = styled.li``;
