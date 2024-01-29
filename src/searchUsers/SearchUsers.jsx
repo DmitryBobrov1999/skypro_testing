@@ -20,18 +20,18 @@ export const SearchUsers = () => {
 	const [userInfo, setUserInfo] = useState(null); // информация о пользователе
 	const [loader, setLoader] = useState(false);
 	const [error, setError] = useState(null);
-	const itemsPerPage = 15; // кол-во пользователей на одной странице
+	const usersPerPage = 15; // кол-во пользователей на одной странице
 
 	const URL = 'https://api.github.com/';
 
 	useEffect(() => {
-		setPageCount(Math.ceil(totalCount / itemsPerPage));
+		setPageCount(Math.ceil(totalCount / usersPerPage));
 	}, [usersArray]); // установка кол-ва страниц при каждом изменении usersArray
 
 	useEffect(() => {
 		if (usersArray) {
 			setLoader(true);
-			getUsersSubmit({ userName, itemsPerPage, itemOffset, selects })
+			getUsersSubmit({ userName, usersPerPage, itemOffset, selects })
 				.then(response => {
 					setLoader(false);
 					setUsersArray(response.data.items);
@@ -46,7 +46,7 @@ export const SearchUsers = () => {
 	const handleSubmit = event => {
 		event.preventDefault();
 		setLoader(true);
-		getUsersSubmit({ userName, itemsPerPage, itemOffset, selects })
+		getUsersSubmit({ userName, usersPerPage, itemOffset, selects })
 			.then(response => {
 				setLoader(false);
 				setUsersArray(response.data.items);
@@ -70,11 +70,19 @@ export const SearchUsers = () => {
 		setItemOffset(event.selected + 1);
 	}; // функция для записи в стейт номера страницы
 
-	const getUserInfo = (user) => {
+	const getUserInfo = user => {
 		axios.get(`${URL}users/${user}`).then(response => {
 			setUserInfo(response.data);
 		});
-	} // функция запроса информации о конкретном пользователе
+	}; // функция запроса информации о конкретном пользователе
+
+	const handleUserClick = userId => {
+		if (id === userId) {
+			setId(null);
+		} else {
+			setId(userId);
+		}
+	};
 
 	return (
 		<S.SearchUsersWrapper>
@@ -110,13 +118,14 @@ export const SearchUsers = () => {
 				<Loader />
 			) : (
 				<>
+					{error && <Error error={error} />}
 					<S.SearchUsersContainer>
 						{usersArray &&
 							usersArray.map(user => (
 								<S.SearchUsersUser
 									onClick={() => {
 										getUserInfo(user.login);
-										setId(user.id);
+										handleUserClick(user.id);
 									}}
 									key={user.id}
 								>
@@ -125,7 +134,7 @@ export const SearchUsers = () => {
 											Репозиториев: {userInfo?.public_repos}
 										</S.SearchUsersSpan>
 										<S.SearchUsersSpan>
-											Аккаунт создан:{' '}
+											Аккаунт создан:
 											{moment(userInfo?.created_at).format('LL')}
 										</S.SearchUsersSpan>
 									</S.SearchUsersInfo>
@@ -135,7 +144,6 @@ export const SearchUsers = () => {
 							))}
 					</S.SearchUsersContainer>
 					{usersArray?.length === 0 && 'Данных нет'}
-					{error && <Error error={error} />}
 				</>
 			)}
 			{usersArray?.length > 0 && (

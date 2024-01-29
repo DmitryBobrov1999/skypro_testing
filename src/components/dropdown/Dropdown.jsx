@@ -12,12 +12,12 @@ export const DropDown = ({
 	setLoader,
 	setError,
 }) => {
-	const itemsPerPage = 15;
+	const usersPerPage = 15;
 
 	useEffect(() => {
 		if (usersArray) {
 			setLoader(true);
-			getUsersSubmit({ userName, itemsPerPage, itemOffset, selects, setLoader })
+			getUsersSubmit({ userName, usersPerPage, itemOffset, selects, setLoader })
 				.then(response => {
 					setLoader(false);
 					setUsersArray(response.data.items);
